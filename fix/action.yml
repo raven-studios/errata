@@ -1,0 +1,20 @@
+name: 'Errata Autofix'
+description: 'Triggered by /errata fix comment — applies safe fixes from Errata review findings directly to the PR branch.'
+author: 'Raven Studios'
+
+branding:
+  icon: 'zap'
+  color: 'purple'
+
+inputs:
+  anthropic-api-key:
+    description: 'Your Anthropic API key.'
+    required: true
+  github-token:
+    description: 'GitHub token with contents:write and pull-requests:write permissions.'
+    required: true
+    default: ${{ github.token }}
+
+runs:
+  using: 'node20'
+  main: '../dist/fix.js'

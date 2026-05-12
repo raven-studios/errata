@@ -5,7 +5,7 @@ import { parseDiff, buildDiffContext } from './core/differ.js';
 import { loadRules } from './core/rules.js';
 import { review } from './core/reviewer.js';
 import { fetchPRDiff, postSummaryComment } from './adapters/github.js';
-import { SeveritySchema } from './core/findings.js';
+import { SeveritySchema, SEVERITY_ORDER, type Severity } from './core/findings.js';
 
 async function run(): Promise<void> {
   if (!github.context.payload.pull_request) {
@@ -24,6 +24,10 @@ async function run(): Promise<void> {
     return;
   }
   const minSeverity = minSeverityParsed.data;
+
+  const failOnRaw = core.getInput('fail-on') || 'must-fix';
+  const failOnParsed = SeveritySchema.safeParse(failOnRaw === 'never' ? 'consider' : failOnRaw);
+  const failOn: Severity | 'never' = failOnRaw === 'never' ? 'never' : (failOnParsed.success ? failOnParsed.data : 'must-fix');
 
   core.info('Detecting repository context...');
   const repoContext = await detectRepoContext('.');
@@ -48,7 +52,7 @@ async function run(): Promise<void> {
 
   const diffContext = buildDiffContext(diffFiles);
 
-  core.info(`Running Errata (min-severity: ${minSeverity})...`);
+  core.info(`Running Errata (min-severity: ${minSeverity}, fail-on: ${failOn})...`);
   const result = await review({
     diffContext,
     rules,
@@ -62,9 +66,15 @@ async function run(): Promise<void> {
 
   await postSummaryComment(githubToken, result);
 
-  const blockers = result.findings.filter(f => f.severity === 'must-fix');
-  if (blockers.length > 0) {
-    core.setFailed(`Errata found ${blockers.length} must-fix issue(s). Resolve them before merging.`);
+  if (failOn !== 'never') {
+    const blockers = result.findings.filter(
+      f => SEVERITY_ORDER[f.severity] <= SEVERITY_ORDER[failOn],
+    );
+    if (blockers.length > 0) {
+      core.setFailed(
+        `Errata found ${blockers.length} ${failOn}+ issue(s). Resolve them before merging.`,
+      );
+    }
   }
 }
 

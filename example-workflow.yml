@@ -1,10 +1,8 @@
-# Copy this file to .github/workflows/errata.yml in your repository.
+# ─── Errata Review ───────────────────────────────────────────────────────────
+# Copy to .github/workflows/errata.yml
 #
-# Required setup:
-#   1. Add your Anthropic API key as a repository secret named ANTHROPIC_API_KEY
-#      Settings → Secrets and variables → Actions → New repository secret
-#
-# That's it. Every PR will be reviewed automatically.
+# Required: add ANTHROPIC_API_KEY as a repository secret.
+# Settings → Secrets and variables → Actions → New repository secret
 
 name: Errata Review
 
@@ -17,13 +15,46 @@ jobs:
     name: Errata
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write   # needed to post the review comment
+      pull-requests: write
       contents: read
 
     steps:
       - uses: raven-studios/errata@v1
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Optional — defaults shown below:
+          # Optional — defaults shown:
           # min-severity: should-fix   # must-fix | should-fix | consider
           # max-files: 50
+          # fail-on: must-fix          # must-fix | should-fix | consider | never
+
+
+# ─── Errata Autofix ──────────────────────────────────────────────────────────
+# Copy to .github/workflows/errata-fix.yml
+#
+# Triggered when anyone comments "/errata fix" on a PR.
+# Errata re-reviews the PR, applies safe fixes directly to the branch,
+# and posts a summary of what was fixed vs. what needs manual attention.
+#
+# Required: same ANTHROPIC_API_KEY secret.
+# Additional permission needed: contents: write (to commit fixes).
+
+# name: Errata Autofix
+#
+# on:
+#   issue_comment:
+#     types: [created]
+#
+# jobs:
+#   fix:
+#     name: Errata Autofix
+#     # Only run on PR comments that contain /errata fix
+#     if: contains(github.event.comment.body, '/errata fix') && github.event.issue.pull_request
+#     runs-on: ubuntu-latest
+#     permissions:
+#       pull-requests: write
+#       contents: write
+#
+#     steps:
+#       - uses: raven-studios/errata/fix@v1
+#         with:
+#           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

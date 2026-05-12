@@ -22,6 +22,10 @@ inputs:
     description: 'Maximum number of changed files to review. PRs beyond this limit are reviewed on the first N files only.'
     required: false
     default: '50'
+  fail-on:
+    description: 'Severity level that fails the workflow check. One of: must-fix, should-fix, consider, never. Default is must-fix.'
+    required: false
+    default: 'must-fix'
 
 runs:
   using: 'node20'

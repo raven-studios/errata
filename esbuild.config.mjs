@@ -1,19 +1,27 @@
 import * as esbuild from 'esbuild';
 
-await esbuild.build({
-  entryPoints: ['src/index.ts'],
+const shared = {
   bundle: true,
-  outfile: 'dist/index.js',
   platform: 'node',
   format: 'cjs',
   target: 'node20',
-  loader: {
-    '.md': 'text',
-  },
-  // Bundle everything — Actions runtime has no node_modules
+  loader: { '.md': 'text' },
   external: [],
   minify: false,
   sourcemap: false,
-});
+};
 
-console.log('Build complete → dist/index.js');
+await Promise.all([
+  esbuild.build({
+    ...shared,
+    entryPoints: ['src/index.ts'],
+    outfile: 'dist/index.js',
+  }),
+  esbuild.build({
+    ...shared,
+    entryPoints: ['src/fix.ts'],
+    outfile: 'dist/fix.js',
+  }),
+]);
+
+console.log('Build complete → dist/index.js, dist/fix.js');
