@@ -1,0 +1,28 @@
+name: 'Errata'
+description: 'AI-powered PR review that flags bugs, security issues, and real problems — not formatting nitpicks.'
+author: 'Raven Studios'
+
+branding:
+  icon: 'eye'
+  color: 'purple'
+
+inputs:
+  anthropic-api-key:
+    description: 'Your Anthropic API key. Store this as a repository secret (ANTHROPIC_API_KEY).'
+    required: true
+  github-token:
+    description: 'GitHub token for reading diffs and posting review comments.'
+    required: true
+    default: ${{ github.token }}
+  min-severity:
+    description: 'Lowest severity level to report. One of: must-fix, should-fix, consider. Default is should-fix.'
+    required: false
+    default: 'should-fix'
+  max-files:
+    description: 'Maximum number of changed files to review. PRs beyond this limit are reviewed on the first N files only.'
+    required: false
+    default: '50'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

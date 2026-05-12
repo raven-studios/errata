@@ -1,0 +1,29 @@
+# Copy this file to .github/workflows/errata.yml in your repository.
+#
+# Required setup:
+#   1. Add your Anthropic API key as a repository secret named ANTHROPIC_API_KEY
+#      Settings → Secrets and variables → Actions → New repository secret
+#
+# That's it. Every PR will be reviewed automatically.
+
+name: Errata Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    name: Errata
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write   # needed to post the review comment
+      contents: read
+
+    steps:
+      - uses: raven-studios/errata@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Optional — defaults shown below:
+          # min-severity: should-fix   # must-fix | should-fix | consider
+          # max-files: 50
